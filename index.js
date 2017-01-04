@@ -10,86 +10,77 @@ function parse (query) {
 	}
 }
 
-// function search (object, keys, value, one, modifier, callback, root) {
-// 	var firstKey = keys[0];
-// 	var key = null;
-// 	root = root || object;
-//
-// 	for (key in object) {
-// 		if (!object.hasOwnProperty(key)) continue;
-// 		if (key !== firstKey) continue;
-//
-// 		if (keys.length === 1) {
-// 			if (value === object[key]) {
-// 				modifier(root, key, value, object);
-// 				if (one) break;
-// 			}
-// 		} else {
-// 			keys.shift();
-// 			return search(object[key], keys, value, one, modifier, callback, root);
-// 		}
-//
-// 	}
-//
-// 	if (keys.length === 1) return callback(root);
-// }
-
-// function search (object, keys, value, one, items) {
-// 	var firstKey = keys[0];
-// 	var item = null;
-// 	var key = null;
-//
-// 	items = items || [];
-//
-// 	for (key in object) {
-// 		if (!object.hasOwnProperty(key)) continue;
-// 		if (key !== firstKey) continue;
-//
-// 		item = object[key];
-//
-// 		if (keys.length === 1) {
-// 			if (value === item) {
-// 				if (one) return item;
-// 				else items.push(item);
-// 			}
-// 		} else {
-// 			keys.shift();
-// 			return search(item, keys, value, one, items);
-// 		}
-//
-// 	}
-//
-// 	if (keys.length === 1) return items;
-// }
-
 var Mpdb = function (options) {
 	const self = this;
-	self._collections = {};
 	self._path = options.path;
-	self.name = options.name;
+	self._name = options.name || 'default';
+	self._collections = options.collections || {};
 };
 
-Mpdb.prototype._collectionPath = function path (name) {
+Mpdb.prototype._queryParse = function (query) {
+	for (var key in query) {
+		if (query.hasOwnProperty(key)) {
+			return {
+				key: key.split('.'),
+				value: query[key]
+			};
+		}
+	}
+};
+
+Mpdb.prototype._collectionPath = function (name) {
+	return Path.join(this._path, this._name, name, 'index.json');
+};
+
+Mpdb.prototype._collectionParse = function (name) {
 	const self = this;
-	return Path.join(self._path, name, 'index.json');
+
+	var path = self._collectionPath(name);
+
+	return Promise.resolve().then(function () {
+		return Fsep.ensureFile(path, '[]');
+	}).then(function () {
+		return Fsep.readFile(path, 'utf8');
+	}).then(function (collection) {
+		return JSON.parse(collection);
+	}).catch(function (error) {
+		throw error;
+	});
+};
+
+Mpdb.prototype._collectionStringify = function (name) {
+	const self = this;
+
+	var path = self._collectionPath(name);
+	var collection = self._collections[name];
+
+	return Promise.resolve().then(function () {
+		return Fsep.ensureFile(path, []);
+	}).then(function () {
+		return Fsep.writeFile(path, JSON.stringify(collection, null, '\t'));
+	}).then(function () {
+		return collection;
+	}).catch(function (error) {
+		throw error;
+	});
 };
 
 Mpdb.prototype._splice = function (name, start, end, data) {
 	const self = this;
 
 	var collection = self._collections[name];
-	var path = self._collectionPath(name);
 
-	name = name || 'default';
-	start = start || collection.length;
-	end = end || 0;
-	data = data || {};
+	if (end === null || end === undefined) end = 0;
+	if (start === null || start === undefined) start = collection.length;
+	if (data && typeof data === 'object' && !data._id) data._id = Uuid.v1();
 
 	return Promise.resolve().then(function () {
-		collection.splice(start, end, data);
-		if (self._path) return Fsep.outputFile(path, JSON.stringify(collection, null, '\t'));
+		if (data) collection.splice(start, end, data);
+		else collection.splice(start, end); // required
 	}).then(function () {
-		return collection[start];
+		if (self._path) return self._collectionStringify(name);
+	}).then(function () {
+		return collection;
 	}).catch(function (error) {
 		throw error;
 	});
@@ -98,24 +89,22 @@ Mpdb.prototype._splice = function (name, start, end, data) {
 Mpdb.prototype._search = function (name, query, one) {
 	const self = this;
 
-	var collection = self._collections[name];
-	var result = null;
-	
-	name = name || 'default';
-	one = one || false;
+	return new Promise(function (resolve) {
+		var collection = self._collections[name];
+		var result = [];
+		var index = 0;
 
-	return Promise.resolve().then(function () {
+		one = one || false;
 
 		if (Object.keys(query).length === 0) {
 			result = collection;
 		} else {
-			result = [];
 			query = parse(query);
 
-			for (var i = 0; i < collection.length; i++) {
-				var item = collection[i];
+			for (index; index < collection.length; index++) {
+				var item = collection[index];
 
-				if (item[query.key] === query.value) {
+				if (item[query.key[0]] === query.value) {
 					if (one) {
 						result = item;
 						break;
@@ -126,101 +115,106 @@ Mpdb.prototype._search = function (name, query, one) {
 			}
 		}
 
-		return result;
+		return resolve([result, index]);
 	});
 };
-
-// Mpdb.prototype._search = function (name, query, one) {
-// 	const self = this;
-// 	var result = null;
-// 	var collection = self._collections[name];
-//
-// 	if (Object.keys(query).length === 0) {
-// 		result = collection;
-// 	} else {
-// 		result = [];
-// 		query = parse(query);
-//
-// 		search(collection, query.key, query.value, one,
-// 			function (item) {
-// 				result.push(item);
-// 			},
-// 			function () {
-//
-// 			}
-// 		);
-// 	}
-//
-// 	return Promise.resolve().then(function () {
-// 		return result;
-// 	});
-// };
 
 Mpdb.prototype.collection = function (name) {
 	const self = this;
 
-	var path = self._collectionPath(name);
-	var data = { _id: Uuid.v1(), _name: name };
-
 	return Promise.resolve().then(function () {
-		if (self._path) return Fsep.ensureFile(path, data);
-	}).then(function () {
-		if (self._path) return Fsep.readFile(path);
+		if (self._path) return self._collectionParse(name);
 	}).then(function (collection) {
-		collection = collection ? JSON.parse(collection) : data;
-		return self._splice(collection, null, null);
+		collection = collection ? collection : self._collections[name] || [];
+		self._collections[name] = collection;
+		return collection;
 	}).catch(function (error) {
 		throw error;
 	});
 };
 
-Mpdb.prototype.findAll = function (query, callback) {
+Mpdb.prototype.findAll = function (name, query) {
 	const self = this;
 
-	self._search(query, false, function (error, items) {
-		if (error) return callback(error);
-		return callback(error, items);
+	return Promise.resolve().then(function () {
+		return self._search(name, query, false);
+	}).then(function (result) {
+		return result[0];
+	}).catch(function (error) {
+		throw error;
 	});
 };
 
-Mpdb.prototype.findOne = function (query, callback) {
+Mpdb.prototype.removeAll = function (name, data) {
 	const self = this;
 
-	self._search(query, true, function (error, item) {
-		if (error) return callback(error);
-		return callback(error, item);
-	});
-};
-
-Mpdb.prototype.insertOne = function (data, callback) {
-	const self = this;
-
-	self._splice(data, null, null, function (error, item) {
-		return callback(error, item);
-	});
-};
-
-Mpdb.prototype.updateOne = function (query, data, callback) {
-	const self = this;
-
-	self._search(query, true, function (error, item, index) {
-		if (error) return callback(error);
-
-		self._splice(data, index, 1, function (error, item) {
-			return callback(error, item);
+	if (data) {
+		return Promise.all(data.map(function (query) {
+			return Promise.resolve().then(function () {
+				return self._search(name, query, true);
+			}).then(function (result) {
+				return self._splice(name, result[1], 1);
+			}).catch(function (error) {
+				throw error;
+			});
+		})).catch(function (error) {
+			throw error;
 		});
+	} else {
+		return Promise.resolve().then(function () {
+			self._collections[name] = [];
+			return self._collectionStringify(name);
+		}).catch(function (error) {
+			throw error;
+		});
+	}
+};
+
+Mpdb.prototype.findOne = function (name, query) {
+	const self = this;
+
+	return Promise.resolve().then(function () {
+		return self._search(name, query, true);
+	}).then(function (result) {
+		return result[0];
+	}).catch(function (error) {
+		throw error;
 	});
 };
 
-Mpdb.prototype.removeOne = function (query, callback) {
+Mpdb.prototype.insertOne = function (name, data) {
 	const self = this;
 
-	self._search(query, true, function (error, item, index) {
-		if (error) return callback(error);
+	return Promise.resolve().then(function () {
+		return self._splice(name, null, null, data);
+	}).then(function (item) {
+		return item;
+	}).catch(function (error) {
+		throw error;
+	});
+};
 
-		self._splice(null, index, 1, function (error) {
-			return callback(error);
-		});
+Mpdb.prototype.updateOne = function (name, query, data) {
+	const self = this;
+
+	return Promise.resolve().then(function () {
+		return self._search(name, query, true);
+	}).then(function (result) {
+		return self._splice(name, result[1], 1, data);
+	}).catch(function (error) {
+		throw error;
+	});
+};
+
+Mpdb.prototype.removeOne = function (name, query) {
+	const self = this;
+
+	return Promise.resolve().then(function () {
+		return self._search(name, query, true);
+	}).then(function (result) {
+		return self._splice(name, result[1], 1);
+	}).catch(function (error) {
+		throw error;
 	});
 };
 

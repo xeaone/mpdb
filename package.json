@@ -1,6 +1,6 @@
 {
   "name": "mpdb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mpdb",
   "main": "index.js",
   "scripts": {
@@ -27,5 +27,8 @@
   "dependencies": {
     "fsep": "^1.9.7",
     "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "promise-tool": "^1.0.1"
   }
 }
