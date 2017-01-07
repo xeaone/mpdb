@@ -1,10 +1,12 @@
 [
 	{
 		"name": "apple",
-		"_id": "42519d90-d215-11e6-88c7-c74f0cac0016"
+		"_id": "216b4fe0-d472-11e6-9118-71907537fb7f",
+		"color": "yellow"
 	},
 	{
-		"name": "grape",
-		"_id": "441c9990-d215-11e6-88c7-c74f0cac0016"
+		"name": "mango",
+		"color": "yellow",
+		"_id": "216b76f0-d472-11e6-9118-71907537fb7f"
 	}
 ]

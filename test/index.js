@@ -11,17 +11,27 @@ Promise.resolve().then(function () {
 }).then(function () {
 	return Database.insertOne('fruit', { name: 'apple' });
 }).then(function () {
-	return Database.insertOne('fruit', { name: 'mango' });
+	return Database.insertOne('fruit', { name: 'grape', color: 'yellow' });
 }).then(function () {
 	return Database.insertOne('fruit', { name: 'potato' });
 }).then(function () {
-	return PromiseTool.setTimeout(3000);
+	// return PromiseTool.setTimeout(1000);
 }).then(function () {
-	return Database.updateOne('fruit', { name: 'mango' }, { name: 'grape' });
+	return Database.updateOne('fruit', { name: 'grape' }, { name: 'mango' });
 }).then(function () {
-	return PromiseTool.setTimeout(3000);
+	// return PromiseTool.setTimeout(1000);
 }).then(function () {
 	return Database.removeOne('fruit', { name: 'potato' });
+}).then(function () {
+	return Database.findOne('fruit', { name: 'apple' });
+}).then(function (item) {
+	console.log(item);
+}).then(function () {
+	return Database.updateOne('fruit', { name: 'apple' }, { color: 'yellow' });
+}).then(function () {
+	return Database.findAll('fruit', { color: 'yellow' });
+}).then(function (items) {
+	console.log(items);
 }).catch(function (error) {
 	console.error(error);
 });

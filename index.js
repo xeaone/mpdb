@@ -10,6 +10,19 @@ function parse (query) {
 	}
 }
 
+function operators (result, data) {
+	for (var key in data) {
+		if (data.hasOwnProperty(key)) {
+			if (data[key] === undefined) {
+				delete result[key];
+			} else {
+				result[key] = data[key];
+			}
+		}
+	}
+	return result;
+}
+
 var Mpdb = function (options) {
 	const self = this;
 	self._path = options.path;
@@ -187,8 +200,6 @@ Mpdb.prototype.insertOne = function (name, data) {
 
 	return Promise.resolve().then(function () {
 		return self._splice(name, null, null, data);
-	}).then(function (item) {
-		return item;
 	}).catch(function (error) {
 		throw error;
 	});
@@ -200,6 +211,7 @@ Mpdb.prototype.updateOne = function (name, query, data) {
 	return Promise.resolve().then(function () {
 		return self._search(name, query, true);
 	}).then(function (result) {
+		data = operators(result[0], data);
 		return self._splice(name, result[1], 1, data);
 	}).catch(function (error) {
 		throw error;
