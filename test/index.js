@@ -1,4 +1,4 @@
-const PromiseTool = require('promise-tool');
+// const PromiseTool = require('promise-tool');
 const Mpdb = require('../index');
 
 var options = { name: 'db', path: __dirname };
@@ -15,11 +15,7 @@ Promise.resolve().then(function () {
 }).then(function () {
 	return Database.insertOne('fruit', { name: 'potato' });
 }).then(function () {
-	// return PromiseTool.setTimeout(1000);
-}).then(function () {
 	return Database.updateOne('fruit', { name: 'grape' }, { name: 'mango' });
-}).then(function () {
-	// return PromiseTool.setTimeout(1000);
 }).then(function () {
 	return Database.removeOne('fruit', { name: 'potato' });
 }).then(function () {
@@ -33,5 +29,15 @@ Promise.resolve().then(function () {
 }).then(function (items) {
 	console.log(items);
 }).catch(function (error) {
-	console.error(error);
+	throw error;
+});
+
+Promise.resolve().then(function () {
+	return Database.collection('veggies');
+}).then(function () {
+	return Database.findAll('veggies', { name: 'green beans' });
+}).then(function (items) {
+	console.log(items);
+}).catch(function (error) {
+	throw error;
 });
