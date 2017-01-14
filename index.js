@@ -68,7 +68,7 @@ Mpdb.prototype._collectionStringify = function (name) {
 	var collection = self._collections[name];
 
 	return Promise.resolve().then(function () {
-		return Fsep.ensureFile(path, []);
+		return Fsep.ensureFile(path, '[]');
 	}).then(function () {
 		return Fsep.writeFile(path, JSON.stringify(collection, null, '\t'));
 	}).then(function () {
