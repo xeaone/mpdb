@@ -2,6 +2,7 @@ const Mpdb = require('../index');
 const Database = Mpdb({ name: 'db', path: __dirname, sync: true });
 
 Promise.resolve().then(function () {
+	console.time('removeOne');
 
 	return Database.removeOne('veggies', {
 		value: 'red',
@@ -9,7 +10,7 @@ Promise.resolve().then(function () {
 	});
 
 }).then(function () {
-	return Database.collection('veggies');
+	console.timeEnd('removeOne');
 }).then(function (collection) {
 	console.log(collection);
 }).catch(function (error) {

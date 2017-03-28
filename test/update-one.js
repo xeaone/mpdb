@@ -3,17 +3,14 @@ const Database = Mpdb({ name: 'db', path: __dirname, sync: true });
 
 Promise.resolve().then(function () {
 
-	var options = {
-		all: false,
-		update: true,
+	return Database.updateOne('veggies', {
 		value: 'brown',
-		path: 'veggies.details.color',
+		path: 'details.color',
 		data: {
-			'details.color': 'brownish'
+			value: 'brownish',
+			path: 'details.color'
 		}
-	};
-
-	return Database.interact(options);
+	});
 
 }).catch(function (error) {
 	console.log(error);
