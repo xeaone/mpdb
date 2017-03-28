@@ -1,4 +1,5 @@
-# mpdb
-Mpdb
+# Mpdb
 
-An in memory and persistent database. This is a database that is kept in memory and contently persistent. Documentation coming soon for now see examples.
+A persistent in memory database. A database that is kept in memory and immediately persistent.
+
+Documentation coming soon for now see examples.

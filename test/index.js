@@ -1,40 +1,18 @@
 // const PromiseTool = require('promise-tool');
 const Mpdb = require('../index');
 
-var Database = Mpdb({ name: 'db', path: __dirname });
+const Database = Mpdb({ name: 'db', path: __dirname, sync: true });
 
 // Promise.resolve().then(function () {
-// 	return Database.removeAll('fruit');
+// 	return Database.insertOne('veggies', { name: 'beans', details: { color: 'red' } });
 // }).then(function () {
-// 	return Database.insertOne('fruit', { name: 'apple' });
+// 	return Database.insertOne('veggies', { name: 'potato', details: { color: 'brown' } });
 // }).then(function () {
-// 	return Database.insertOne('fruit', { name: 'grape', color: 'yellow' });
+// 	return Database.insertOne('veggies', { name: 'apples', details: { color: 'red' } });
 // }).then(function () {
-// 	return Database.insertOne('fruit', { name: 'potato' });
-// }).then(function () {
-// 	return Database.updateOne('fruit', { name: 'grape' }, { name: 'mango' });
-// }).then(function () {
-// 	return Database.removeOne('fruit', { name: 'potato' });
-// }).then(function () {
-// 	return Database.findOne('fruit', { name: 'apple' });
+// 	return Database.findAll('veggies', { 'details.color': 'red' });
 // }).then(function (item) {
 // 	console.log(item);
-// }).then(function () {
-// 	return Database.updateOne('fruit', { name: 'apple' }, { color: 'yellow' });
-// }).then(function () {
-// 	return Database.findAll('fruit', { color: 'yellow' });
-// }).then(function (items) {
-// 	console.log(items);
 // }).catch(function (error) {
-// 	throw error;
+// 	console.log(error);
 // });
-
-Promise.resolve().then(function () {
-	return Database.insertOne('veggies', { name: 'green beans' });
-}).then(function () {
-	return Database.findOne('veggies', { name: 'green beans', $all: true });
-}).then(function (item) {
-	console.log(item);
-}).catch(function (error) {
-	throw error;
-});

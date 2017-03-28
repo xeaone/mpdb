@@ -1,24 +1,16 @@
-const Handle = require('./lib/handle');
 const Utility = require('./lib/utility');
+const Cycni = require('cycni');
 const Path = require('path');
 const Fsep = require('fsep');
 const Uuid = require('uuid');
 const Os = require('os');
 
-function operators (result, data) {
-	for (var key in data) {
-		if (data.hasOwnProperty(key)) {
-			if (data[key] === undefined) {
-				delete result[key];
-			} else {
-				result[key] = data[key];
-			}
-		}
-	}
-	return result;
-}
+var ALL = 2;
+var ONE = 3;
+var BREAK = 4;
+var CONTINUE = 5;
 
-var Mpdb = function (options) {
+const Mpdb = function (options) {
 	const self = this;
 
 	self._sync = options.sync || true;
@@ -34,31 +26,6 @@ var Mpdb = function (options) {
 	else return Fsep.mkdirs(self._db);
 };
 
-Mpdb.prototype._queryParse = function (object) {
-	object = object || {};
-
-	var query = {
-		records: []
-	};
-
-	for (var key in object) {
-		if (object.hasOwnProperty(key)) {
-			if (key.includes('$')) {
-				query[key] = object[key];
-			} else {
-				query.key = key;
-				query.value = object[key];
-			}
-		}
-	}
-
-	if (!Object.keys(query).includes('$all')) {
-		query.$all = false;
-	}
-
-	return query;
-};
-
 Mpdb.prototype._collectionPath = function (name) {
 	const self = this;
 
@@ -68,7 +35,7 @@ Mpdb.prototype._collectionPath = function (name) {
 Mpdb.prototype._collectionLoad = function (name) {
 	const self = this;
 
-	if (self._collections.has(name)) return Promise.resolve();
+	// TODO maybe do nothing if db is in memory
 
 	var path = self._collectionPath(name);
 
@@ -80,23 +47,18 @@ Mpdb.prototype._collectionLoad = function (name) {
 		if (data.length > 2) return data;
 		else return Fsep.writeFile(path, '[]');
 	}).then(function (data) {
-		self._collections.set(name, JSON.parse(data || '[]'));
+		data = JSON.parse(data);
+		self._collections.set(name, data);
 	}).catch(function (error) {
 		throw error;
 	});
 };
 
 Mpdb.prototype._collectionSave = function (name) {
-	const self = this;
-	var path = null;
-	var data = null;
+	var self = this, path, data;
 
 	return Promise.resolve().then(function () {
-		if (self._collections.has(name)) {
-			data = self._collections.get(name);
-		} else {
-			data = [];
-		}
+		data = self._collections.get(name);
 
 		path = self._collectionPath(name);
 		data = JSON.stringify(data, null, '\t');
@@ -107,213 +69,114 @@ Mpdb.prototype._collectionSave = function (name) {
 	});
 };
 
-Mpdb.prototype.set = function (name, query, data) {
-	const self = this;
+Mpdb.prototype.collection = function (name) {
+	var self = this;
+
+	return Promise.resolve().then(function () {
+		return self._collections.get(name);
+	}).catch(function (error) {
+		throw error;
+	});
+};
+
+Mpdb.prototype.each = function (name, callback) {
+	var self = this;
 
 	return Promise.resolve().then(function () {
 		return self._collectionLoad(name);
 	}).then(function () {
-		if (Object.keys(query).length === 0) {
-			Handle.set(data, ['_id'], Uuid.v1());
-			Handle.set(self._collections, [name], data);
-		} else {
-			// TODO: get update working
-			query = self._queryParse(query);
-			var has = Handle.has(self._collections, [name, query.key], query.value);
-			if (has) Handle.set(self._collections, [name, query.key], query.value);
+		var collections = self._collections.get(name);
+		var results = [], data, collection;
+
+		for (var i = 0; i < collections.length; i++) {
+			collection = collections[i];
+			data = callback(collection, i, collections);
+
+			if (data && data.cmd === BREAK) break;
+			if (data && data.cmd === CONTINUE) continue;
+			if (data && data.cmd === ONE) return data.result;
+			if (data && data.cmd === ALL) results.push(data.result);
 		}
-	}).then(function () {
-		return self._collectionSave(name);
+
+		if (data && data.cmd === ALL) return results;
+		else self._collections.set(name, collections);
+
+	}).then(function (result) {
+		if (result) return result;
+		else return self._collectionSave(name);
 	}).catch(function (error) {
 		throw error;
 	});
 };
 
-// Mpdb.prototype.add = function (name, data) {
-// 	const self = this;
-//
-// 	return Promise.resolve().then(function () {
-// 		return self._collectionLoad(name);
-// 	}).then(function () {
-// 		var collection = self._collections.get(name);
-// 		Handle.set(data, ['_id'], Uuid.v1());
-// 		Handle.set(self._collections, [name, collection.length], data);
-// 	}).then(function () {
-// 		return self._collectionSave(name);
-// 	}).catch(function (error) {
-// 		throw error;
-// 	});
-// };
-
-Mpdb.prototype.get = function (name, query) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self._collectionLoad(name);
-	}).then(function () {
-		var collection = self._collections.get(name);
-
-		if (Object.keys(query).length === 0) {
-			return collection;
-		} else {
-			var items = [];
-
-			query = self._queryParse(query);
-
-			Utility.each(collection, function (item) {
-				var has = Handle.has(item, query.key, query.value);
-				if (has) items.push(item);
-				if (!query.$all) return 'break';
-			});
-
-			return items;
+Mpdb.prototype.findAll = function (name, options) {
+	return this.each(name, function (collection) {
+		if (Cycni.has(collection, options.path, options.value)) {
+			return {
+				cmd: ALL,
+				result: collection
+			};
 		}
-	}).catch(function (error) {
-		throw error;
 	});
 };
 
-// Mpdb.prototype._splice = function (name, start, end, data) {
-// 	const self = this;
+Mpdb.prototype.findOne = function (name, options) {
+	return this.each(name, function (collection) {
+		if (Cycni.has(collection, options.path, options.value)) {
+			return {
+				cmd: ONE,
+				result: collection
+			};
+		}
+	});
+};
+
+Mpdb.prototype.removeAll = function (name, options) {
+	return this.each(name, function (collection, index, collections) {
+		if (Cycni.has(collection, options.path, options.value)) {
+			return {
+				cmd: CONTINUE,
+				result: collections.splice(index, 1)
+			};
+		}
+	});
+};
+
+Mpdb.prototype.removeOne = function (name, options) {
+	return this.each(name, function (collection, index, collections) {
+		if (Cycni.has(collection, options.path, options.value)) {
+			return {
+				cmd: BREAK,
+				result: collections.splice(index, 1)
+			};
+		}
+	});
+};
+
+
+
+// Mpdb.prototype.insert = function (name, options) {
+// 	return this.prepare(function (collection) {
 //
-// 	var collection = self._collections.get(name);
+// 		options.paths.push(collection.length.toString());
+// 		options.data._id = Uuid.v1();
+// 		Cycni.set(collection, options.path, options.data);
 //
-// 	if (end === null || end === undefined) end = 0;
-// 	if (start === null || start === undefined) start = collection.length;
-// 	if (data && typeof data === 'object' && !data._id) data._id = Uuid.v1();
+// 	});
+// };
+// Mpdb.prototype.update = function (name, options) {
+// 	return this.prepare(name, function (collection) {
 //
-// 	return Promise.resolve().then(function () {
-// 		if (data) collection.splice(start, end, data);
-// 		else collection.splice(start, end); // required
-// 	}).then(function () {
-// 		return self._collectionSave(name);
-// 	}).catch(function (error) {
-// 		throw error;
+// 		Cycni.traverse(collection, options.path, function (c, k) {
+// 			Object.keys(options.data).forEach(function (key) {
+// 				Cycni.set(c[k], key, options.data[key]);
+// 			});
+// 		});
+//
 // 	});
 // };
 
-// Mpdb.prototype._search = function (name, query, one) {
-// 	const self = this;
-//
-// 	return Promise.resolve().then(function () {
-// 		return self._collectionLoad(name);
-// 	}).then(function () {
-// 		var collection = self._collections.get(name);
-// 		var result = [];
-// 		var index = 0;
-//
-// 		one = one || false;
-//
-// 		if (Object.keys(query).length === 0) {
-// 			result = collection;
-// 		} else {
-// 			query = parse(query);
-//
-// 			for (index; index < collection.length; index++) {
-// 				var item = collection[index];
-//
-// 				if (item[query.key[0]] === query.value) {
-// 					if (one) {
-// 						result = item;
-// 						break;
-// 					} else {
-// 						result.push(item);
-// 					}
-// 				}
-// 			}
-// 		}
-//
-// 		return [result, index];
-// 	}).catch(function (error) {
-// 		throw error;
-// 	});
-// };
 
-Mpdb.prototype.findOne = function (name, query) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self.get(name, query);
-	}).catch(function (error) {
-		throw error;
-	});
-	// return Promise.resolve().then(function () {
-	// 	return self._search(name, query, true);
-	// }).then(function (result) {
-	// 	return result[0];
-	// }).catch(function (error) {
-	// 	throw error;
-	// });
-};
-
-Mpdb.prototype.insertOne = function (name, data) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self.add(name, data);
-	}).catch(function (error) {
-		throw error;
-	});
-	// return Promise.resolve().then(function () {
-	// 	return self._splice(name, null, null, data);
-	// }).catch(function (error) {
-	// 	throw error;
-	// });
-};
-
-Mpdb.prototype.updateOne = function (name, query, data) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self._search(name, query, true);
-	}).then(function (result) {
-		data = operators(result[0], data);
-		return self._splice(name, result[1], 1, data);
-	}).catch(function (error) {
-		throw error;
-	});
-};
-
-Mpdb.prototype.removeOne = function (name, query) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self._search(name, query, true);
-	}).then(function (result) {
-		return self._splice(name, result[1], 1);
-	}).catch(function (error) {
-		throw error;
-	});
-};
-
-Mpdb.prototype.findAll = function (name, query) {
-	const self = this;
-
-	return Promise.resolve().then(function () {
-		return self._search(name, query, false);
-	}).then(function (result) {
-		return result[0];
-	}).catch(function (error) {
-		throw error;
-	});
-};
-
-Mpdb.prototype.removeAll = function (name, data) {
-	const self = this;
-
-	if (data) {
-		return Promise.all(data.map(function (query) {
-			return self.removeOne(name, query);
-		}));
-	} else {
-		return Promise.resolve().then(function () {
-			self._collections.set(name, new Map());
-			return self._collectionSave(name);
-		}).catch(function (error) {
-			throw error;
-		});
-	}
-};
 
 module.exports = function (options) {
 	return new Mpdb(options || {});
