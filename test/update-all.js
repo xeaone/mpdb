@@ -7,8 +7,8 @@ Promise.resolve().then(function () {
 		value: 'brown',
 		path: 'details.color',
 		data: {
-			value: 'brownish',
-			path: 'details.color'
+			'more.stuff': 'yah',
+			'details.color': 'brown'
 		}
 	});
 

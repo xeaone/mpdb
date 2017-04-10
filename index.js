@@ -181,7 +181,7 @@ Mpdb.prototype.updateAll = function (name, options) {
 };
 
 Mpdb.prototype.updateOne = function (name, options) {
-	var self = this, collection;
+	var self = this, collection, path, result;
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
@@ -189,13 +189,23 @@ Mpdb.prototype.updateOne = function (name, options) {
 
 		for (var i = 0, l = collections.length; i < l; i++) {
 			collection = collections[i];
-			if (Cycni.has(collections[i], options.path, options.value)) {
-				Cycni.set(collection, options.data.path, options.data.value);
+
+			if (Cycni.has(collection, options.path, options.value)) {
+				result = collection;
+
+				for (path in options.data) {
+					if (options.data.hasOwnProperty(path)) {
+						Cycni.set(collection, path, options.data[path]);
+					}
+				}
+
 				break;
 			}
 		}
 
 		return self.collectionSave(name, collections);
+	}).then(function () {
+		return result;
 	}).catch(function (error) {
 		throw error;
 	});
