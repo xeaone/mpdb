@@ -2,4 +2,13 @@
 
 A persistent in memory database. A database that is kept in memory and immediately persistent.
 
-Documentation coming soon for now see examples.
+## Install
+`npm install mpdb --save`
+
+## API
+
+### findOne
+returns the found collection or undefined.
+
+### removeOne
+returns the removed collection or undefined.

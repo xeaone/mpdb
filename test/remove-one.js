@@ -5,14 +5,13 @@ Promise.resolve().then(function () {
 	console.time('removeOne');
 
 	return Database.removeOne('veggies', {
-		value: 'red',
-		path: 'details.color'
+		value: 'peas',
+		path: 'name'
 	});
 
-}).then(function () {
+}).then(function (result) {
 	console.timeEnd('removeOne');
-}).then(function (collection) {
-	console.log(collection);
+	console.log(result);
 }).catch(function (error) {
 	console.log(error);
 });

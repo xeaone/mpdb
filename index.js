@@ -138,7 +138,7 @@ Mpdb.prototype.removeAll = function (name, options) {
 };
 
 Mpdb.prototype.removeOne = function (name, options) {
-	var self = this;
+	var self = this, result;
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
@@ -146,12 +146,15 @@ Mpdb.prototype.removeOne = function (name, options) {
 
 		for (var i = 0, l = collections.length; i < l; i++) {
 			if (Cycni.has(collections[i], options.path, options.value)) {
+				result = collections[i];
 				Cycni.remove(collections, i);
 				break;
 			}
 		}
 
 		return self.collectionSave(name, collections);
+	}).then(function () {
+		return result;
 	}).catch(function (error) {
 		throw error;
 	});
