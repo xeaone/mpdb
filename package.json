@@ -1,6 +1,6 @@
 {
   "name": "mpdb",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Mpdb a persistent in memory database",
   "main": "index.js",
   "scripts": {
