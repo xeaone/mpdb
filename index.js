@@ -107,11 +107,10 @@ Mpdb.prototype.findOne = function (name, options) {
 		for (var i = 0, l = collections.length; i < l; i++) {
 			collection = collections[i];
 			if (Cycni.has(collection, options.path, options.value)) {
-				break;
+				return collection;
 			}
 		}
 
-		return collection;
 	}).catch(function (error) {
 		throw error;
 	});

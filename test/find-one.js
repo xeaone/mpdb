@@ -5,7 +5,7 @@ Promise.resolve().then(function () {
 	console.time('find one');
 
 	return Database.findOne('veggies', {
-		value: 'red',
+		value: 're',
 		path: 'details.color'
 	});
 
