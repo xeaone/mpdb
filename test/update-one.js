@@ -7,9 +7,11 @@ Promise.resolve().then(function () {
 		value: 'potato',
 		path: 'name',
 		data: {
-			'more.stuff': 'yah',
-			'details.color': 'brown'
-		}
+			name: 'potato',
+			details: {
+				color: 'pink'
+			}
+		},
 	});
 }).then(function (result) {
 	console.log(result);

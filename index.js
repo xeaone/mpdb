@@ -77,21 +77,20 @@ Mpdb.prototype.collection = function (name) {
 };
 
 Mpdb.prototype.findAll = function (name, options) {
-	var self = this;
+	var self = this, collection, result = [];
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
 	}).then(function (collections) {
-		var results = [], collection;
 
 		for (var i = 0, l = collections.length; i < l; i++) {
 			collection = collections[i];
 			if (Cycni.has(collection, options.path, options.value)) {
-				results.push(collection);
+				result.push(collection);
 			}
 		}
 
-		return results;
+		return result;
 	}).catch(function (error) {
 		throw error;
 	});
@@ -117,21 +116,23 @@ Mpdb.prototype.findOne = function (name, options) {
 };
 
 Mpdb.prototype.removeAll = function (name, options) {
-	var self = this, collection;
+	var self = this, result = [];
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
 	}).then(function (collections) {
 
 		for (var i = 0, l = collections.length; i < l; i++) {
-			collection = collections[i];
-			if (Cycni.has(collection, options.path, options.value)) {
+			if (Cycni.has(collections[i], options.path, options.value)) {
+				result.push(collections[i]);
 				Cycni.remove(collections, i);
 				l = collections.length;
 			}
 		}
 
 		return self.collectionSave(name, collections);
+	}).then(function () {
+		return result;
 	}).catch(function (error) {
 		throw error;
 	});
@@ -161,44 +162,38 @@ Mpdb.prototype.removeOne = function (name, options) {
 };
 
 Mpdb.prototype.updateAll = function (name, options) {
-	var self = this, collection;
+	var self = this, result = [];
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
 	}).then(function (collections) {
 
 		for (var i = 0, l = collections.length; i < l; i++) {
-			collection = collections[i];
 			if (Cycni.has(collections[i], options.path, options.value)) {
-				Cycni.set(collection, options.data.path, options.data.value);
+				options.data.id = collections[i].id;
+				result.push(collections[i] = options.data);
 			}
 		}
 
 		return self.collectionSave(name, collections);
+	}).then(function () {
+		return result;
 	}).catch(function (error) {
 		throw error;
 	});
 };
 
 Mpdb.prototype.updateOne = function (name, options) {
-	var self = this, collection, path, result;
+	var self = this, result;
 
 	return Promise.resolve().then(function () {
 		return self.collectionLoad(name);
 	}).then(function (collections) {
 
 		for (var i = 0, l = collections.length; i < l; i++) {
-			collection = collections[i];
-
-			if (Cycni.has(collection, options.path, options.value)) {
-				result = collection;
-
-				for (path in options.data) {
-					if (options.data.hasOwnProperty(path)) {
-						Cycni.set(collection, path, options.data[path]);
-					}
-				}
-
+			if (Cycni.has(collections[i], options.path, options.value)) {
+				options.data.id = collections[i].id;
+				result = collections[i] = options.data;
 				break;
 			}
 		}

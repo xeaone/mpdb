@@ -12,3 +12,7 @@ returns the found collection or undefined.
 
 ### removeOne
 returns the removed collection or undefined.
+
+### updateOne
+accepts path, value, and data
+return the updated collection or undefined.
