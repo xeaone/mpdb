@@ -87,14 +87,18 @@ Mpdb.prototype.findAll = function (name, options) {
 		return self.collectionLoad(name);
 	}).then(function (collections) {
 
-		for (var i = 0, l = collections.length; i < l; i++) {
-			collection = collections[i];
-			if (Cycni.has(collection, options.path, options.value)) {
-				result.push(collection);
+		if (options === null || options === undefined) {
+			return collections;
+		} else {
+			for (var i = 0, l = collections.length; i < l; i++) {
+				collection = collections[i];
+				if (Cycni.has(collection, options.path, options.value)) {
+					result.push(collection);
+				}
 			}
+			return result;
 		}
 
-		return result;
 	}).catch(function (error) {
 		throw error;
 	});
