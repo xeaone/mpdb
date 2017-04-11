@@ -56,6 +56,10 @@ Mpdb.prototype.collectionLoad = function (name) {
 Mpdb.prototype.collectionSave = function (name, collections) {
 	var self = this, path, data;
 
+	if (collections === null || collections === undefined) {
+		collections = self._collections[name];
+	}
+
 	return Promise.resolve().then(function () {
 		path = self.collectionPath(name);
 		data = JSON.stringify(collections, null, '\t');
