@@ -1,5 +1,10 @@
 var Mpdb = require('../index');
-var Database = Mpdb({ name: 'db', path: __dirname, sync: true });
+
+var Database = new Mpdb({
+	name: 'db',
+	sync: true,
+	path: __dirname
+});
 
 Promise.resolve().then(function () {
 	console.time('find all');

@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/AlexanderElias/mpdb#readme",
   "dependencies": {
-    "cycni": "^1.1.7",
-    "fsep": "^1.9.9",
+    "cycni": "^1.1.8",
+    "fsep": "^1.4.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

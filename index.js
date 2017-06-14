@@ -8,9 +8,11 @@ var Os = require('os');
 var Mpdb = function (options) {
 	var self = this;
 
-	self._collections = {};
-	self._sync = options.sync || true;
+	options = options || {};
+
+	self._sync = options.sync || false;
 	self._name = options.name || 'default';
+	self._collections = options.collections || {};
 
 	self._path = options.path || Path.join(Os.homedir(), '.mpdb');
 	self._path = Path.isAbsolute(self._path) ? self._path : Path.join(process.cwd(), self._path);
@@ -253,6 +255,4 @@ Mpdb.prototype.insertOne = function (name, options) {
 	});
 };
 
-module.exports = function (options) {
-	return new Mpdb(options || {});
-};
+module.exports = Mpdb;

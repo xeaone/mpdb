@@ -7,16 +7,45 @@ A persistent in memory database. A database that is kept in memory and immediate
 
 ## API
 
-### findOne
-returns the found collection or undefined.
+### Mpdb
+A initializes the files and directories. Collections are loaded annd kept in memory on demand. The data is stored in a json format.
 
-### findAll
-Can except a path value criteria or no options to return the collection.
-returns the found collection or undefined.
+- `options: Object`
+	- `name: String` The name of the database. Default is `'default'`.
+	- `sync: String` Initalize sync or async. Default is `false`.
+	- `path: String` The path to the persistent data. Default is `~/{username}/.mpdb/.`
 
-### removeOne
-returns the removed collection or undefined.
+### Mpdb.findAll
+- Returns `Promise`
 
-### updateOne
-accepts path, value, and data
-return the updated collection or undefined.
+### Mpdb.findOne
+- Returns `Promise`
+
+### Mpdb.removeAll
+- Returns `Promise`
+
+### Mpdb.removeOne
+- Returns `Promise`
+
+### Mpdb.updateAll
+- Returns `Promise`
+
+### Mpdb.updateOne
+- Returns `Promise`
+
+### Mpdb.insertAll
+- Returns `Promise`
+
+### Mpdb.insertOne
+- Returns `Promise`
+
+### Mpdb.collection
+- Returns `Promise`
+
+### Mpdb.collectionLoad
+- Returns `Promise`
+
+### Mpdb.collectionSave
+- Returns `Promise`
+
+### Mpdb.collectionPath
