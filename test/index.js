@@ -1,4 +1,3 @@
-// const PromiseTool = require('promise-tool');
 const Mpdb = require('../index');
 
 const Database = Mpdb({ name: 'db', path: __dirname, sync: true });
