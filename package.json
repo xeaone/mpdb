@@ -26,7 +26,6 @@
 	"homepage": "https://github.com/AlexanderElias/mpdb#readme",
 	"dependencies": {
 		"cycni": "^1.1.8",
-		"fsep": "^3.0.0",
 		"uuid": "^3.2.1"
 	}
 }

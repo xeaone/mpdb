@@ -3,25 +3,6 @@
 const Path = require('path');
 const Fs = require('fs');
 
-// module.exports.mkdirsSync = function (paths) {
-// 	var cwd = process.cwd();
-// 	var root = Path.parse(cwd).root;
-// 	var cwp = null;
-//
-// 	paths = Path.normalize(paths);
-// 	cwp = Path.isAbsolute(paths) ? root : cwd;
-// 	paths = paths.split(Path.sep);
-//
-// 	paths = paths.filter(function (p) {
-// 		return p && p !== '';
-// 	});
-//
-// 	for (var i = 0; i < paths.length; i++) {
-// 		cwp = Path.join(cwp, paths[i]);
-// 		if (!Fs.existsSync(cwp)) Fs.mkdirSync(cwp);
-// 	}
-// };
-
 module.exports.MapToObject = function (map) {
 	var object = {};
 
